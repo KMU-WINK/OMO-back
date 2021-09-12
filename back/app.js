@@ -31,7 +31,7 @@ if (process.env.NODE_ENV === 'production') {
 dotenv.config();
 
 app.use(cors({
-    origin: 'http://localhost:3060',
+    origin: '*',
     credential: true,
 }));
 
