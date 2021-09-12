@@ -4,7 +4,7 @@ const path = require('path');
 const multerS3 = require('multer-s3');
 const AWS = require('aws-sdk');
 
-const { Post, Image, Hashtag } = require('../models');
+const { Planet, Post, Image, Hashtag } = require('../models');
 // const { isLoggedIn } = require('./middlewares');
 
 const router = express.Router();
@@ -26,12 +26,13 @@ const upload = multer({
     limits: { fileSize: 20 * 1024 * 1024 }, // 20MB
 });
 
-router.post('/', upload.single('image'), async (req, res, next) => {
+router.post('/:planetId/post', upload.single('image'), async (req, res, next) => {
     try {
         console.log(req);
         const hashtags = req.body.content.match(/#[^\s#]+/g);
         const post = await Post.create({
             content: req.body.content,
+            planetId: req.params.planetId,
         });
         if (hashtags) {
             const result = await Promise.all(hashtags.map((tag) => Hashtag.findOrCreate({
@@ -50,6 +51,19 @@ router.post('/', upload.single('image'), async (req, res, next) => {
                 await post.addImages(image);
             }
         }
+        res.status(201).json({ message : "ok" });
+    } catch (error) {
+        console.error(error);
+        next(error);
+    }
+});
+
+router.post('/planet', async (req, res, next) => {
+    try {
+        const planet = await Planet.create({
+            title: req.body.title,
+            planetForm: req.body.planetForm
+        });
         res.status(201).json({ message : "ok" });
     } catch (error) {
         console.error(error);

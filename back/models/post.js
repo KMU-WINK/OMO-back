@@ -19,9 +19,8 @@ module.exports = class Post extends Model {
     }
     static associate(db) {
         db.Post.belongsTo(db.User);
+        db.Post.belongsTo(db.Planet);
         db.Post.belongsToMany(db.Hashtag, { through: 'PostHashtag' });
         db.Post.hasMany(db.Image);
-        //TODO: 행성선택
-
     }
 };
