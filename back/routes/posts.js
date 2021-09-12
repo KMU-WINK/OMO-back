@@ -1,15 +1,14 @@
 const express = require('express');
-const {User, Post, Image} = require('../models');
+const {Planet, Post, Image} = require('../models');
 
 const router = express.Router();
 
 router.get('/', async (req, res, next) => {
     try {
-        const posts = await Post.findAll({
-            limit: 10,
+        const posts = await Planet.findAll({
             order: [['createdAt', 'DESC']],
             include: [{
-                model: Image,
+                model: Post,
             }],
         });
 

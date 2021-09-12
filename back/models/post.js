@@ -8,7 +8,10 @@ module.exports = class Post extends Model {
                 type: DataTypes.TEXT,
                 allowNull: false,
             },
-            // RetweetId
+            isDelete: {
+                type: DataTypes.BOOLEAN,
+                allowNull: false,
+            }
         }, {
             modelName: 'Post',
             tableName: 'posts',

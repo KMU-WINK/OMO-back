@@ -19,6 +19,7 @@ const upload = multer({
     storage: multerS3({
         s3: new AWS.S3(),
         bucket: 's3-omo',
+        contentType: multerS3.AUTO_CONTENT_TYPE,
         key(req, file, cb) {
             cb(null, `original/${Date.now()}_${path.basename(file.originalname)}`)
         }
@@ -26,13 +27,51 @@ const upload = multer({
     limits: { fileSize: 20 * 1024 * 1024 }, // 20MB
 });
 
-router.post('/:planetId/post', upload.single('image'), async (req, res, next) => {
+router.post('/planet', async (req, res, next) => {
     try {
-        console.log(req);
+        const planet = await Planet.create({
+            title: req.body.title,
+            planetForm: req.body.planetForm,
+            isDelete: false,
+        });
+        res.status(201).json({ message : "ok" });
+    } catch (error) {
+        console.error(error);
+        next(error);
+    }
+});
+
+router.patch('/planet/:planetId', async (req, res, next) => {
+    try {
+        const planet = await Planet.findOne({
+            where: { id: req.params.planetId }
+        })
+        await Planet.update({
+            isDelete: req.body.isDelete,
+        }, {
+            where: { id: req.params.planetId }
+        });
+        res.status(201).json({ message : "ok" });
+    } catch (error) {
+        console.error(error);
+        next(error);
+    }
+});
+
+router.post('/:planetId/diary', upload.array('image'), async (req, res, next) => {
+    try {
+        const planet = await Planet.findOne({
+            where: { id: req.params.planetId }
+        })
+        if (!planet) {
+            return res.status(403).send('존재하지 않는 행성입니다.');
+        }
         const hashtags = req.body.content.match(/#[^\s#]+/g);
+        console.log(planet.id);
         const post = await Post.create({
             content: req.body.content,
-            planetId: req.params.planetId,
+            PlanetId: planet.id,
+            isDelete: false,
         });
         if (hashtags) {
             const result = await Promise.all(hashtags.map((tag) => Hashtag.findOrCreate({
@@ -40,16 +79,9 @@ router.post('/:planetId/post', upload.single('image'), async (req, res, next) =>
             })));
             await post.addHashtags(result.map((v) => v[0]));
         }
-        if (req.body.image) {
-            if (Array.isArray(req.body.image)) {
-                console.log('어레이 돌아가니?');
-                const images = await Promise.all(req.body.image.map((image) => Image.create({ src: image })));
-                await post.addImages(images);
-            } else {
-                console.log('그냥이 돌아가니?');
-                const image = await Image.create({ src: req.body.image });
-                await post.addImages(image);
-            }
+        if (req.files) {
+            const images = await Promise.all(req.files.map((image) => Image.create({ src: image.location })));
+            await post.addImages(images);
         }
         res.status(201).json({ message : "ok" });
     } catch (error) {
@@ -58,11 +90,12 @@ router.post('/:planetId/post', upload.single('image'), async (req, res, next) =>
     }
 });
 
-router.post('/planet', async (req, res, next) => {
+router.patch('/diary/:diaryId', async (req, res, next) => {
     try {
-        const planet = await Planet.create({
-            title: req.body.title,
-            planetForm: req.body.planetForm
+        await Post.update({
+            isDelete: req.body.isDelete,
+        }, {
+            where: { id: req.params.diaryId }
         });
         res.status(201).json({ message : "ok" });
     } catch (error) {

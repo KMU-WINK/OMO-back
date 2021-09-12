@@ -12,6 +12,10 @@ module.exports = class Planet extends Model {
         type: DataTypes.TEXT,
         allowNull: false,
       },
+      isDelete: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+      }
     }, {
       modelName: 'Planet',
       tableName: 'planets',
