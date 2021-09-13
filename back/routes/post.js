@@ -30,7 +30,7 @@ const upload = multer({
 router.post('/planet', async (req, res, next) => {
     try {
         const planet = await Planet.create({
-            title: req.body.title,
+            name: req.body.name,
             planetForm: req.body.planetForm,
             isDelete: false,
         });
@@ -67,8 +67,10 @@ router.post('/:planetId/diary', upload.array('image'), async (req, res, next) =>
             return res.status(403).send('존재하지 않는 행성입니다.');
         }
         const hashtags = req.body.content.match(/#[^\s#]+/g);
+
         console.log(planet.id);
         const post = await Post.create({
+            title: req.body.title,
             content: req.body.content,
             PlanetId: planet.id,
             isDelete: false,
@@ -109,14 +111,28 @@ router.post('/images', upload.array('image'),async (req, res, next) => {
     res.json(req.files.map((v) => v.location))
 });
 
-router.delete('/:postId', async (req, res, next) => {
+router.delete('/planet/:planetId', async (req, res, next) => {
+    try {
+        await Planet.destroy({
+            where: {
+                id: req.params.planetId,
+            }
+        });
+        res.status(201).json({ message : "ok" });
+    } catch(error) {
+        console.error(error);
+        next(error);
+    }
+});
+
+router.delete('/diary/:postId', async (req, res, next) => {
     try {
         await Post.destroy({
            where: {
                id: req.params.postId,
            }
         });
-        res.json({ PostId: parseInt(req.params.postId, 10) });
+        res.status(201).json({ message : "ok" });
     } catch(error) {
         console.error(error);
         next(error);

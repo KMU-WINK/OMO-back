@@ -4,7 +4,7 @@ const { Model } = DataTypes;
 module.exports = class Planet extends Model {
   static init(sequelize) {
     return super.init({
-      title: {
+      name: {
         type: DataTypes.TEXT,
         allowNull: false,
       },
